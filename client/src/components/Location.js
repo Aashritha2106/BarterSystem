@@ -21,7 +21,7 @@ const Location = ({ userId }) => {
   const updateLocation = async () => {
     if (!latitude || !longitude) return alert("Please get location first!");
 
-    const response = await fetch("http://localhost:4000/api/auth/updateLocation", {
+    const response = await fetch("https://bartersystem-m45b.onrender.com/api/auth/updateLocation", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, latitude, longitude }),

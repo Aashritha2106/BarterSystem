@@ -5,7 +5,7 @@ import "./marketplace.css";
 import { Link } from "react-router-dom";
 
 if (!window.socket) {
-  window.socket = io("http://localhost:4000"); // Attach socket to global window object
+  window.socket = io("https://bartersystem-m45b.onrender.com"); // Attach socket to global window object
 }
 
 const socket = window.socket; // Reference it locally
@@ -24,11 +24,11 @@ function Marketplace() {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
 
-      const response = await fetch("http://localhost:4000/api/items", {
+      const response = await fetch("https://bartersystem-m45b.onrender.com/api/items", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const priceResponse = await fetch("http://localhost:4000/api/price/allPrices", {
+      const priceResponse = await fetch("https://bartersystem-m45b.onrender.com/api/price/allPrices", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -91,7 +91,7 @@ function Marketplace() {
   const fetchUnreadCounts = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      const response = await fetch(`http://localhost:4000/api/chat/unread/${userId}`);
+      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/chat/unread/${userId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch unread summary");
       }
@@ -172,14 +172,14 @@ useEffect(() => {
       const sender = localStorage.getItem("userId");
   
       // Fetch chat messages
-      const response = await fetch(`http://localhost:4000/api/chat/${sender}/${user._id}?viewer=${sender}`);
+      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/chat/${sender}/${user._id}?viewer=${sender}`);
       const data = await response.json();
       console.log("Fetched chat messages:", data);
   
       setMessages(data);
   
       // Mark messages from this user as read
-      await fetch(`http://localhost:4000/api/chat/markAsRead/${user._id}/${sender}`, {
+      await fetch(`https://bartersystem-m45b.onrender.com/api/chat/markAsRead/${user._id}/${sender}`, {
         method: "PUT",
       });
   
@@ -206,7 +206,7 @@ useEffect(() => {
   
     try {
       // ✅ Save message to DB
-      const response = await fetch("http://localhost:4000/api/chat", {
+      const response = await fetch("https://bartersystem-m45b.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sender, receiver, message: messageInput }),
@@ -264,7 +264,7 @@ useEffect(() => {
                 {group.items.map((item, index) => (
                   <div key={index} className="item-card">
                     {item.image && (
-                      <img src={`http://localhost:4000${item.image}`} alt={item.name} className="item-image" />
+                      <img src={`https://bartersystem-m45b.onrender.com${item.image}`} alt={item.name} className="item-image" />
                     )}
                     <p><strong>{item.name}</strong>: {item.quantity} kg</p>
                   </div>

@@ -26,7 +26,7 @@ function UserPage() {
   const fetchAvailableItems = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:4000/api/price/allPrices", {
+      const response = await fetch("https://bartersystem-m45b.onrender.com/api/price/allPrices", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -41,7 +41,7 @@ function UserPage() {
     try {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-      const response = await fetch(`http://localhost:4000/api/items/owner/${userId}`, {
+      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/owner/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -71,7 +71,7 @@ function UserPage() {
       formData.append("owner", userId);
       if (image) formData.append("image", image);
 
-      const response = await fetch("http://localhost:4000/api/items", {
+      const response = await fetch("https://bartersystem-m45b.onrender.com/api/items", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -100,7 +100,7 @@ function UserPage() {
       const formData = new FormData();
       formData.append("profilePic", file);
 
-      const response = await fetch("http://localhost:4000/api/auth/uploadPic", {
+      const response = await fetch("https://bartersystem-m45b.onrender.com/api/auth/uploadPic", {
         method: "POST",
         body: formData,
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -108,7 +108,7 @@ function UserPage() {
 
       const data = await response.json();
       if (response.ok) {
-        const imageUrl = `http://localhost:4000${data.profilePic}`;
+        const imageUrl = `https://bartersystem-m45b.onrender.com${data.profilePic}`;
         setProfilePic(imageUrl);
         localStorage.setItem("profilePic", imageUrl);
       } else {
@@ -136,7 +136,7 @@ function UserPage() {
       formData.append("quantity", quantity);
       if (image) formData.append("image", image);
   
-      const response = await fetch(`http://localhost:4000/api/items/${editingItem._id}`, {
+      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/${editingItem._id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -159,7 +159,7 @@ function UserPage() {
     if (!window.confirm("❓ Are you sure you want to delete this item?")) return;
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:4000/api/items/${id}`, {
+      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -184,7 +184,7 @@ function UserPage() {
     if (!userId) return;
   
     try {
-      const response = await fetch(`http://localhost:4000/api/auth/getUser/${userId}`);
+      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/auth/getUser/${userId}`);
       const data = await response.json();
   
       if (response.ok) {
@@ -238,7 +238,7 @@ function UserPage() {
       console.log("📌 Sending to backend:", { latitude, longitude, newAddress });
   
       // Send updated location to backend
-      const updateResponse = await fetch("http://localhost:4000/api/auth/updateLocation", {
+      const updateResponse = await fetch("https://bartersystem-m45b.onrender.com/api/auth/updateLocation", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, latitude, longitude, address: newAddress }),
@@ -263,7 +263,7 @@ function UserPage() {
     if (!latitude || !longitude || !userId) return;
 
     try {
-      const response = await axios.get("http://localhost:4000/api/auth/nearbyUsers", {
+      const response = await axios.get("https://bartersystem-m45b.onrender.com/api/auth/nearbyUsers", {
         params: { latitude, longitude, userId },
       });
 
@@ -292,7 +292,7 @@ function UserPage() {
           <div className="profile-details">
             <div className="profile-pic-container">
               {profilePic ? (
-                <img src={`http://localhost:4000${profilePic}`} alt="Profile" className="profile-pic" />
+                <img src={`https://bartersystem-m45b.onrender.com${profilePic}`} alt="Profile" className="profile-pic" />
               ) : (
                 <div className="placeholder-pic">No Image</div>
               )}
@@ -390,7 +390,7 @@ function UserPage() {
                 <li key={userItem._id}>
                   {userItem.imageUrl && (
                     <img
-                      src={`http://localhost:4000${userItem.imageUrl}`}
+                      src={`https://bartersystem-m45b.onrender.com${userItem.imageUrl}`}
                       alt={userItem.name}
                       className="item-image"
                     />

@@ -12,20 +12,27 @@ connectDB();
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
 
+// CORS configuration for both Express and Socket.IO
+const corsOptions = {
+  origin: process.env.CLIENT_URL || "http://localhost:3000", // Make sure to use the right frontend URL here
+  methods: ["GET", "POST"],
+  credentials: true,
+};
+
+// Apply CORS to both Express and Socket.IO
 app.use(express.json());
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
+app.use(cors(corsOptions)); // Apply CORS to Express routes
+
+// Set up Socket.IO with the same CORS options
+const io = new Server(server, {
+  cors: corsOptions,
+});
 
 // Serve static uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+// Routes for API endpoints
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/items", require("./routes/itemRoutes"));
 app.use("/api/price", require("./routes/priceRoutes"));
@@ -34,27 +41,32 @@ app.use("/api", require("./routes/tradeRoutes"));
 
 // Chat functionality
 const Chat = require("./models/chatModel");
-const users = {};
+const users = {}; // Store active users with socket IDs
 
+// Socket.IO Connection handling
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
+  // Handle user joining and mapping their user ID to the socket
   socket.on("join", (userId) => {
     users[userId] = socket.id;
     console.log(`User ${userId} is now online`);
   });
 
+  // Handle sending a message
   socket.on("sendMessage", ({ sender, receiver, message }) => {
     const receiverSocket = users[receiver];
     if (receiverSocket) {
       io.to(receiverSocket).emit("receiveMessage", { sender, message });
 
+      // Fetch unread message count and notify receiver
       Chat.countDocuments({ receiver, sender, unread: true }).then((unreadCount) => {
         io.to(receiverSocket).emit("unreadCount", { sender, count: unreadCount });
       });
     }
   });
 
+  // Handle checking unread messages for a user
   socket.on("checkUnread", async (userId) => {
     try {
       const unreadCounts = await Chat.aggregate([
@@ -73,6 +85,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Mark messages as read
   socket.on("markMessagesAsRead", async ({ sender, receiver }) => {
     try {
       console.log(`[SOCKET] markMessagesAsRead triggered with sender=${sender}, receiver=${receiver}`);
@@ -81,6 +94,7 @@ io.on("connection", (socket) => {
         { $set: { unread: false } }
       );
 
+      // Notify sender that messages were read
       const senderSocket = users[sender];
       if (senderSocket) {
         io.to(senderSocket).emit("messagesRead", { receiver });
@@ -90,6 +104,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Handle user disconnection
   socket.on("disconnect", () => {
     Object.keys(users).forEach((userId) => {
       if (users[userId] === socket.id) delete users[userId];
@@ -103,8 +118,11 @@ io.on("connection", (socket) => {
 // app.use(express.static(frontendPath));
 // app.get("*", (req, res) => res.sendFile(path.join(frontendPath, "index.html")));
 
+// Start server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+
 
 
 

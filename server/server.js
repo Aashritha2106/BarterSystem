@@ -14,6 +14,8 @@ const app = express();
 const server = createServer(app);
 
 // CORS configuration for both Express and Socket.IO
+console.log("CLIENT_URL from environment:", process.env.CLIENT_URL);
+
 const corsOptions = {
   origin: process.env.CLIENT_URL || "http://localhost:3000", // Make sure to use the right frontend URL here
   methods: ["GET", "POST"],

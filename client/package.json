@@ -2,7 +2,7 @@
   "name": "apicall",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://bartersystem-m45b.onrender.com",
+  "proxy": "http://localhost:4000",
   "dependencies": {
     "@mui/x-date-pickers": "^6.18.5",
     "@testing-library/jest-dom": "^5.17.0",

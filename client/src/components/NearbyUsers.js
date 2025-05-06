@@ -18,7 +18,7 @@ const NearbyUsers = () => {
     if (!latitude || !longitude) return alert("Location not available yet.");
 
     const response = await fetch(
-      `https://bartersystem-m45b.onrender.com/api/auth/nearbyUsers?latitude=${latitude}&longitude=${longitude}`
+      `${process.env.REACT_APP_API_BASE_URL}/api/auth/nearbyUsers?latitude=${latitude}&longitude=${longitude}`
     );
 
     const data = await response.json();

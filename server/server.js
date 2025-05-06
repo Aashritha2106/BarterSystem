@@ -18,7 +18,7 @@ console.log("CLIENT_URL from environment:", process.env.CLIENT_URL);
 
 const corsOptions = {
   origin: process.env.CLIENT_URL || "http://localhost:3000", // Make sure to use the right frontend URL here
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 };
 

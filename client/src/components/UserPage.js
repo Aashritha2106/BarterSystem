@@ -9,6 +9,7 @@ function UserPage() {
   const [quantity, setQuantity] = useState("");
   const [image, setImage] = useState(null);
   const [itemsList, setItemsList] = useState([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [availableItems, setAvailableItems] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [userName, setUserName] = useState(localStorage.getItem("name") || "");
@@ -19,6 +20,7 @@ function UserPage() {
   const [longitude, setLongitude] = useState(null);
   const [address, setAddress] = useState(localStorage.getItem("address") || "");
   const [nearbyUsers, setNearbyUsers] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
   
 
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ function UserPage() {
   const fetchAvailableItems = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/price/allPrices", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/price/allPrices`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -38,10 +40,11 @@ function UserPage() {
   };
 
   const fetchUserItems = async () => {
+    setIsLoadingItems(true); // Start loading
     try {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/owner/${userId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/items/owner/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -49,8 +52,11 @@ function UserPage() {
       else console.error("Failed to fetch user items:", data.message);
     } catch (error) {
       console.error("Error fetching user items:", error);
+    } finally {
+      setIsLoadingItems(false); // Stop loading regardless of success or failure
     }
   };
+  
 
   useEffect(() => {
     fetchAvailableItems();
@@ -71,7 +77,7 @@ function UserPage() {
       formData.append("owner", userId);
       if (image) formData.append("image", image);
 
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/items", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/items`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -92,25 +98,26 @@ function UserPage() {
     }
   };
 
-  const handleProfilePicChange = async (e) => {
+  const handleUploadClick = async () => {
+    if (!selectedFile) return alert("No file selected.");
+  
     try {
-      const file = e.target.files[0];
-      if (!file) return alert("Please select a file.");
-
       const formData = new FormData();
-      formData.append("profilePic", file);
-
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/auth/uploadPic", {
+      formData.append("profilePic", selectedFile);
+  
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/uploadPic`, {
         method: "POST",
         body: formData,
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-
+  
       const data = await response.json();
       if (response.ok) {
-        const imageUrl = `https://bartersystem-m45b.onrender.com${data.profilePic}`;
-        setProfilePic(imageUrl);
-        localStorage.setItem("profilePic", imageUrl);
+        const relativePath = data.profilePic; // e.g., /uploads/img123.jpg
+        setProfilePic(relativePath);
+        localStorage.setItem("profilePic", relativePath);
+        setSelectedFile(null);
+        alert("Upload successful!");
       } else {
         console.error("Upload failed:", data.message);
         alert(`Error: ${data.message}`);
@@ -120,6 +127,7 @@ function UserPage() {
       alert("An error occurred while uploading.");
     }
   };
+  
   const handleEditItem = (item) => {
     setEditingItem(item);
     setItem(item.name);
@@ -136,7 +144,7 @@ function UserPage() {
       formData.append("quantity", quantity);
       if (image) formData.append("image", image);
   
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/${editingItem._id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/items/${editingItem._id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -159,7 +167,7 @@ function UserPage() {
     if (!window.confirm("❓ Are you sure you want to delete this item?")) return;
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/${id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/items/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -184,7 +192,7 @@ function UserPage() {
     if (!userId) return;
   
     try {
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/auth/getUser/${userId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/getUser/${userId}`);
       const data = await response.json();
   
       if (response.ok) {
@@ -208,6 +216,13 @@ function UserPage() {
   useEffect(() => {
     fetchUserAddress();
   }, []); // ✅ Only fetch once when the component mounts
+  useEffect(() => {
+    const storedPic = localStorage.getItem("profilePic");
+    if (storedPic) {
+      setProfilePic(storedPic);
+    }
+  }, []);
+  
   
 
   const updateLocation = async () => {
@@ -238,7 +253,7 @@ function UserPage() {
       console.log("📌 Sending to backend:", { latitude, longitude, newAddress });
   
       // Send updated location to backend
-      const updateResponse = await fetch("https://bartersystem-m45b.onrender.com/api/auth/updateLocation", {
+      const updateResponse = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/updateLocation`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, latitude, longitude, address: newAddress }),
@@ -263,7 +278,7 @@ function UserPage() {
     if (!latitude || !longitude || !userId) return;
 
     try {
-      const response = await axios.get("https://bartersystem-m45b.onrender.com/api/auth/nearbyUsers", {
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/auth/nearbyUsers`, {
         params: { latitude, longitude, userId },
       });
 
@@ -292,11 +307,12 @@ function UserPage() {
           <div className="profile-details">
             <div className="profile-pic-container">
               {profilePic ? (
-                <img src={`https://bartersystem-m45b.onrender.com${profilePic}`} alt="Profile" className="profile-pic" />
+                <img src={`${process.env.REACT_APP_API_BASE_URL}${profilePic}`} alt="Profile" className="profile-pic" />
               ) : (
                 <div className="placeholder-pic">No Image</div>
               )}
-              <input type="file" accept="image/*" onChange={handleProfilePicChange} />
+              <input type="file" accept="image/*" onChange={(e) => setSelectedFile(e.target.files[0])} />
+              <button onClick={handleUploadClick} disabled={!selectedFile}>Upload Image</button>
               <p>Upload your Bitmoji image</p>
             </div>
             <div className="user-info">
@@ -384,26 +400,29 @@ function UserPage() {
   
           {/* User's Items List */}
           <h3>Your Items</h3>
-          {itemsList.length > 0 ? (
-            <ul>
-              {itemsList.map((userItem) => (
-                <li key={userItem._id}>
-                  {userItem.imageUrl && (
-                    <img
-                      src={`https://bartersystem-m45b.onrender.com${userItem.imageUrl}`}
-                      alt={userItem.name}
-                      className="item-image"
-                    />
-                  )}
-                  {userItem.name} - {userItem.quantity} kg
-                  <button onClick={() => handleEditItem(userItem)}>✏️ Edit</button>
-                  <button onClick={() => handleDeleteItem(userItem._id)}>🗑️ Delete</button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="empty-state">You haven't added any items yet.</p>
-          )}
+          {isLoadingItems ? (
+  <p>Loading your items...</p>
+) : itemsList.length > 0 ? (
+  <ul>
+    {itemsList.map((userItem) => (
+      <li key={userItem._id}>
+        {userItem.imageUrl && (
+          <img
+            src={`${process.env.REACT_APP_API_BASE_URL}${userItem.imageUrl}`}
+            alt={userItem.name}
+            className="item-image"
+          />
+        )}
+        {userItem.name} - {userItem.quantity} kg
+        <button onClick={() => handleEditItem(userItem)}>✏️ Edit</button>
+        <button onClick={() => handleDeleteItem(userItem._id)}>🗑️ Delete</button>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p className="empty-state">You haven't added any items yet.</p>
+)}
+
   
           <button onClick={handleExploreMarket} className="explore-market-btn">
             Explore Marketplace & Chat

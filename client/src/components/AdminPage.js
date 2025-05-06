@@ -10,7 +10,7 @@ function AdminPage() {
   const fetchPrices = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/price/allPrices", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/price/allPrices`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -36,7 +36,7 @@ function AdminPage() {
   const handleSetPrice = async (id, updatedName, updatedPrice) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/price/setPrice", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/price/setPrice`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

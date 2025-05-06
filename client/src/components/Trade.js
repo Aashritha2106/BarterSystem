@@ -18,7 +18,7 @@ function Trade() {
     try {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/items/owner/${userId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/items/owner/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -38,7 +38,7 @@ function Trade() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `https://bartersystem-m45b.onrender.com/api/items/equivalent/${selectedItem}/${quantity}`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/items/equivalent/${selectedItem}/${quantity}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

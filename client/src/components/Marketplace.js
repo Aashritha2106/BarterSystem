@@ -5,7 +5,7 @@ import "./marketplace.css";
 import { Link } from "react-router-dom";
 
 if (!window.socket) {
-  window.socket = io("https://bartersystem-m45b.onrender.com"); // Attach socket to global window object
+  window.socket = io(`${process.env.REACT_APP_API_BASE_URL}`); // Attach socket to global window object
 }
 
 const socket = window.socket; // Reference it locally
@@ -18,35 +18,38 @@ function Marketplace() {
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [isLoadingMarket, setIsLoadingMarket] = useState(true);
+
 
   const fetchMarketItems = async () => {
+    setIsLoadingMarket(true); // Start loading
     try {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/items", {
+  
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/items`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      const priceResponse = await fetch("https://bartersystem-m45b.onrender.com/api/price/allPrices", {
+  
+      const priceResponse = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/price/allPrices`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       const itemsData = await response.json();
       const priceArray = await priceResponse.json();
-
+  
       const priceData = priceArray.reduce((acc, item) => {
         acc[item.name] = item.pricePerKg;
         return acc;
       }, {});
-
+  
       if (response.ok && priceResponse.ok) {
         const userItems = itemsData.filter((item) => item.owner._id === userId);
         const filteredItems = itemsData.filter((item) => item.owner._id !== userId);
-
+  
         const groupedItems = filteredItems.reduce((acc, item) => {
           const ownerId = item.owner._id;
-
+  
           if (!acc[ownerId]) {
             acc[ownerId] = {
               owner: item.owner,
@@ -54,20 +57,20 @@ function Marketplace() {
               tradeOptions: [],
             };
           }
-
+  
           acc[ownerId].items.push({
             name: item.name,
             quantity: item.quantity,
             image: item.imageUrl,
           });
-
+  
           userItems.forEach((userItem) => {
             if (priceData[userItem.name] && priceData[item.name] && userItem.name !== item.name) {
               const userPrice = priceData[userItem.name];
               const itemPrice = priceData[item.name];
-
+  
               const equivalentQuantity = (userItem.quantity * userPrice) / itemPrice;
-
+  
               acc[ownerId].tradeOptions.push({
                 give: userItem.name,
                 receive: item.name,
@@ -76,22 +79,25 @@ function Marketplace() {
               });
             }
           });
-
+  
           return acc;
         }, {});
-
+  
         setMarketItems(Object.values(groupedItems));
       } else {
         console.error("Failed to fetch data");
       }
     } catch (error) {
       console.error("Error fetching market items:", error);
+    } finally {
+      setIsLoadingMarket(false); // Stop loading after everything
     }
   };
+  
   const fetchUnreadCounts = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/chat/unread/${userId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/chat/unread/${userId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch unread summary");
       }
@@ -172,14 +178,14 @@ useEffect(() => {
       const sender = localStorage.getItem("userId");
   
       // Fetch chat messages
-      const response = await fetch(`https://bartersystem-m45b.onrender.com/api/chat/${sender}/${user._id}?viewer=${sender}`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/chat/${sender}/${user._id}?viewer=${sender}`);
       const data = await response.json();
       console.log("Fetched chat messages:", data);
   
       setMessages(data);
   
       // Mark messages from this user as read
-      await fetch(`https://bartersystem-m45b.onrender.com/api/chat/markAsRead/${user._id}/${sender}`, {
+      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/chat/markAsRead/${user._id}/${sender}`, {
         method: "PUT",
       });
   
@@ -206,7 +212,7 @@ useEffect(() => {
   
     try {
       // ✅ Save message to DB
-      const response = await fetch("https://bartersystem-m45b.onrender.com/api/chat", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sender, receiver, message: messageInput }),
@@ -253,7 +259,9 @@ useEffect(() => {
 )}
       
       <div className="market-items-grid">
-        {marketItems.length === 0 ? (
+      {isLoadingMarket ? (
+    <p>Loading market items...</p>
+  ) : marketItems.length === 0 ? (
           <p>No items available from other users right now.</p>
         ) : (
           marketItems.map((group) => (
@@ -264,7 +272,7 @@ useEffect(() => {
                 {group.items.map((item, index) => (
                   <div key={index} className="item-card">
                     {item.image && (
-                      <img src={`https://bartersystem-m45b.onrender.com${item.image}`} alt={item.name} className="item-image" />
+                      <img src={`${process.env.REACT_APP_API_BASE_URL}${item.image}`} alt={item.name} className="item-image" />
                     )}
                     <p><strong>{item.name}</strong>: {item.quantity} kg</p>
                   </div>
